@@ -16,7 +16,7 @@ Object.defineProperty(Vue.prototype, '$ssrContext', {
   }
 })
 
-// expose FunctionalRenderContext for ssr runtime helper installation
+// 暴露 FunctionalRenderContext 用于 ssr 运行时辅助安装
 Object.defineProperty(Vue, 'FunctionalRenderContext', {
   value: FunctionalRenderContext
 })
