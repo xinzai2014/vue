@@ -21,6 +21,7 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 /**
  * In some cases we may want to disable observation inside a component's
  * update computation.
+ * 在某些情况下，我们可能需要禁用组件更新计算中的观测功能。
  */
 export let shouldObserve: boolean = true
 
@@ -106,6 +107,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
+ * 尝试为一个值创建一个观察者实例，如果成功观察到，则返回新的观察者，如果该值已经有一个，则返回现有的观察者。
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
@@ -131,6 +133,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
+ * 定义响应式属性
  */
 export function defineReactive (
   obj: Object,

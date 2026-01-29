@@ -14,12 +14,15 @@ export function initProvide (vm: Component) {
 }
 
 export function initInjections (vm: Component) {
+  //resolveInject 一层一层往父级找所有传入的provided
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
+    //关闭观察者
     toggleObserving(false)
     Object.keys(result).forEach(key => {
       /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
+        //将provided中的数据，定义到vm尚为响应式属性
         defineReactive(vm, key, result[key], () => {
           warn(
             `Avoid mutating an injected value directly since the changes will be ` +
@@ -32,6 +35,7 @@ export function initInjections (vm: Component) {
         defineReactive(vm, key, result[key])
       }
     })
+    //打开观察者
     toggleObserving(true)
   }
 }
@@ -39,6 +43,7 @@ export function initInjections (vm: Component) {
 export function resolveInject (inject: any, vm: Component): ?Object {
   if (inject) {
     // inject is :any because flow is not smart enough to figure out cached
+    // inject：any  因为流不够智能，无法计算缓存
     const result = Object.create(null)
     const keys = hasSymbol
       ? Reflect.ownKeys(inject)
