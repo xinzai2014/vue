@@ -36,22 +36,27 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
-export function proxy (target: Object, sourceKey: string, key: string) {
-  sharedPropertyDefinition.get = function proxyGetter () {
+export function proxy(target: Object, sourceKey: string, key: string) {
+  sharedPropertyDefinition.get = function proxyGetter() {
     return this[sourceKey][key]
   }
-  sharedPropertyDefinition.set = function proxySetter (val) {
+  sharedPropertyDefinition.set = function proxySetter(val) {
     this[sourceKey][key] = val
   }
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
-export function initState (vm: Component) {
+export function initState(vm: Component) {
   vm._watchers = []
   const opts = vm.$options
+  //初始化props，校验props数据是否符合props选项的定义，并返回,赋值到_props 上
   if (opts.props) initProps(vm, opts.props)
+  //把options上的methods挂到vm上
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
+    //把$options.data 赋值到vm上使用definProperty，get时获取this._data[key]数据，set同样，
+    //进行了字段重复和保留字段校验
+    //把data添加observe观察者监视（）
     initData(vm)
   } else {
     observe(vm._data = {}, true /* asRootData */)
@@ -62,7 +67,9 @@ export function initState (vm: Component) {
   }
 }
 
-function initProps (vm: Component, propsOptions: Object) {
+function initProps(vm: Component, propsOptions: Object) {
+  //propsData是父级传进来的数据
+  //propsOptions是组件定义的props选项
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
   // cache prop keys so that future props updates can iterate using Array
@@ -75,12 +82,13 @@ function initProps (vm: Component, propsOptions: Object) {
   }
   for (const key in propsOptions) {
     keys.push(key)
+    //校验props数据是否符合props选项的定义，并返回
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)
       if (isReservedAttribute(hyphenatedKey) ||
-          config.isReservedAttr(hyphenatedKey)) {
+        config.isReservedAttr(hyphenatedKey)) {
         warn(
           `"${hyphenatedKey}" is a reserved attribute and cannot be used as component prop.`,
           vm
@@ -98,11 +106,13 @@ function initProps (vm: Component, propsOptions: Object) {
         }
       })
     } else {
+      //加到_props上响应数据
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 在Vue.extend（）过程中，静态属性已经在组件的原型上代理。我们只需要在这里代理实例化时定义的属性
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }
@@ -110,7 +120,7 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
-function initData (vm: Component) {
+function initData(vm: Component) {
   let data = vm.$options.data
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
@@ -149,10 +159,11 @@ function initData (vm: Component) {
     }
   }
   // observe data
+  // 重点开始 ： 把data添加observe观察者监视（）
   observe(data, true /* asRootData */)
 }
 
-export function getData (data: Function, vm: Component): any {
+export function getData(data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
   pushTarget()
   try {
@@ -167,7 +178,7 @@ export function getData (data: Function, vm: Component): any {
 
 const computedWatcherOptions = { lazy: true }
 
-function initComputed (vm: Component, computed: Object) {
+function initComputed(vm: Component, computed: Object) {
   // $flow-disable-line
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
@@ -210,7 +221,7 @@ function initComputed (vm: Component, computed: Object) {
   }
 }
 
-export function defineComputed (
+export function defineComputed(
   target: any,
   key: string,
   userDef: Object | Function
@@ -230,7 +241,7 @@ export function defineComputed (
     sharedPropertyDefinition.set = userDef.set || noop
   }
   if (process.env.NODE_ENV !== 'production' &&
-      sharedPropertyDefinition.set === noop) {
+    sharedPropertyDefinition.set === noop) {
     sharedPropertyDefinition.set = function () {
       warn(
         `Computed property "${key}" was assigned to but it has no setter.`,
@@ -241,8 +252,8 @@ export function defineComputed (
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
-function createComputedGetter (key) {
-  return function computedGetter () {
+function createComputedGetter(key) {
+  return function computedGetter() {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
       if (watcher.dirty) {
@@ -257,12 +268,13 @@ function createComputedGetter (key) {
 }
 
 function createGetterInvoker(fn) {
-  return function computedGetter () {
+  return function computedGetter() {
     return fn.call(this, this)
   }
 }
 
-function initMethods (vm: Component, methods: Object) {
+function initMethods(vm: Component, methods: Object) {
+  //props传进来的参数
   const props = vm.$options.props
   for (const key in methods) {
     if (process.env.NODE_ENV !== 'production') {
@@ -290,7 +302,7 @@ function initMethods (vm: Component, methods: Object) {
   }
 }
 
-function initWatch (vm: Component, watch: Object) {
+function initWatch(vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
     if (Array.isArray(handler)) {
@@ -303,7 +315,7 @@ function initWatch (vm: Component, watch: Object) {
   }
 }
 
-function createWatcher (
+function createWatcher(
   vm: Component,
   expOrFn: string | Function,
   handler: any,
@@ -319,7 +331,7 @@ function createWatcher (
   return vm.$watch(expOrFn, handler, options)
 }
 
-export function stateMixin (Vue: Class<Component>) {
+export function stateMixin(Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
   // the object here.
@@ -364,7 +376,7 @@ export function stateMixin (Vue: Class<Component>) {
       invokeWithErrorHandling(cb, vm, [watcher.value], vm, info)
       popTarget()
     }
-    return function unwatchFn () {
+    return function unwatchFn() {
       watcher.teardown()
     }
   }

@@ -34,17 +34,24 @@ export function toggleObserving (value: boolean) {
  * object. Once attached, the observer converts the target
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
+ * 附加到每个被观察对象的观察者类
+ 对象。一旦附着，观察者就会转换目标
+  将对象的属性键转换为getter/setter方法
+  收集依赖项并分发更新。
  */
 export class Observer {
   value: any;
   dep: Dep;
-  vmCount: number; // number of vms that have this object as root $data
+  // number of vms that have this object as root $data
+  // 记录有多少个Vue实例(vm)将当前这个对象作为其根数据($data)。
+  // 这是Vue响应式系统的一部分，用于跟踪依赖关系和优化数据变化的处理
+  vmCount: number;
 
   constructor (value: any) {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this)
+    def(value, '__ob__', this) // 给value对象添加一个不可枚举的属性__ob__，值为当前的Observer实例
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods)
@@ -61,6 +68,10 @@ export class Observer {
    * Walk through all properties and convert them into
    * getter/setters. This method should only be called when
    * value type is Object.
+   *
+遍历所有属性，并将其转换为
+getter/setters。此方法仅应在特定情况下调用
+值类型为 Object。
    */
   walk (obj: Object) {
     const keys = Object.keys(obj)
@@ -107,7 +118,8 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
- * 尝试为一个值创建一个观察者实例，如果成功观察到，则返回新的观察者，如果该值已经有一个，则返回现有的观察者。
+ * 尝试为一个值创建一个观察者实例，如果成功观察到，则返回新的观察者，
+ * 如果该值已经有一个，则返回现有的观察者。
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
@@ -126,6 +138,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     ob = new Observer(value)
   }
   if (asRootData && ob) {
+    // TODO 不清楚这个vmCount有什么用
     ob.vmCount++
   }
   return ob
@@ -143,7 +156,8 @@ export function defineReactive (
   shallow?: boolean
 ) {
   const dep = new Dep()
-
+  //Object.getOwnPropertyDescriptor获取属性描述符
+  /***configurable、enumerable、value、writable */
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -155,7 +169,7 @@ export function defineReactive (
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-
+  // 递归地为子对象添加响应式属性
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
@@ -163,6 +177,7 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
+        //收集依赖
         dep.depend()
         if (childOb) {
           childOb.dep.depend()

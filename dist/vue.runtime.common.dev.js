@@ -8107,10 +8107,9 @@ var Transition = {
       return placeholder(h, rawChild)
     }
 
-    // ensure a key that is unique to the vnode type and to this transition
-    // component instance. This key will be used to remove pending leaving nodes
-    // during entering.
-    var id = "__transition-" + (this._uid) + "-";
+    // 确保一个对vnode类型和此过渡组件实例唯一的键。
+// 此键将在进入期间用于移除待处理的离开节点。
+var id = "__transition-" + (this._uid) + "-";
     child.key = child.key == null
       ? child.isComment
         ? id + 'comment'
@@ -8252,8 +8251,8 @@ var TransitionGroup = {
     children.forEach(recordPosition);
     children.forEach(applyTranslation);
 
-    // force reflow to put everything in position
-    // assign to this to avoid being removed in tree-shaking
+    // 强制重排以使所有元素就位
+    // 赋值给this以避免在tree-shaking中被移除
     // $flow-disable-line
     this._reflow = document.body.offsetHeight;
 
@@ -8287,11 +8286,11 @@ var TransitionGroup = {
       if (this._hasMove) {
         return this._hasMove
       }
-      // Detect whether an element with the move class applied has
-      // CSS transitions. Since the element may be inside an entering
-      // transition at this very moment, we make a clone of it and remove
-      // all other transition classes applied to ensure only the move class
-      // is applied.
+      // 检测应用了移动类的元素是否有
+      // CSS过渡。由于此时元素可能正处于进入
+      // 过渡中，我们克隆它并移除
+      // 所有其他应用的过渡类以确保只有移动类
+      // 被应用。
       var clone = el.cloneNode();
       if (el._transitionClasses) {
         el._transitionClasses.forEach(function (cls) { removeClass(clone, cls); });
@@ -8364,7 +8363,7 @@ Vue.prototype.$mount = function (
   return mountComponent(this, el, hydrating)
 };
 
-// devtools global hook
+// devtools全局钩子
 /* istanbul ignore next */
 if (inBrowser) {
   setTimeout(function () {

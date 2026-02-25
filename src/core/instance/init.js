@@ -59,7 +59,7 @@ export function initMixin(Vue: Class<Component>) {
     callHook(vm, 'beforeCreate')
     //在数据初始化之前，先初始化inject，一层一层往父级找所有传入的provided，然后将数据绑定到vm上响应式属性
     initInjections(vm) // resolve injections before data/props
-    //初始化状态：处理options传入的props\methods\data\computed\watch
+    //初始化状态：处理options传入的props\methods\data\computed\watch，进行init初始化
     initState(vm)
     //初始化provide：把当前组件的inject处理了一下，赋值到当前组件的provide属性上
     initProvide(vm) // resolve provide after data/props
