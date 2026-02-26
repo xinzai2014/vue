@@ -6,7 +6,7 @@ import baseModules from 'core/vdom/modules/index'
 import platformModules from 'web/runtime/modules/index'
 
 // the directive module should be applied last, after all
-// built-in modules have been applied.
+// built-in modules have been applied.  指令模块应在所有内置模块应用完毕后最后应用。
 const modules = platformModules.concat(baseModules)
 
 export const patch: Function = createPatchFunction({ nodeOps, modules })

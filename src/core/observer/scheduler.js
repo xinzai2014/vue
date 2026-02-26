@@ -23,7 +23,7 @@ let flushing = false
 let index = 0
 
 /**
- * Reset the scheduler's state.
+ * Reset the scheduler's state.  重置调度程序的状态
  */
 function resetSchedulerState () {
   index = queue.length = activatedChildren.length = 0
@@ -66,25 +66,31 @@ if (inBrowser && !isIE) {
 }
 
 /**
- * Flush both queues and run the watchers.
+ * Flush both queues and run the watchers.  刷新两个队列并运行 依赖(订阅者)
  */
 function flushSchedulerQueue () {
   currentFlushTimestamp = getNow()
   flushing = true
   let watcher, id
 
-  // Sort queue before flush.
-  // This ensures that:
+  // Sort queue before flush.  在刷新前对队列进行排序
+  // This ensures that: 确保
   // 1. Components are updated from parent to child. (because parent is always
   //    created before the child)
   // 2. A component's user watchers are run before its render watcher (because
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  /**
+1. 组件是从父组件更新到子组件的。（因为父组件总是在子组件之前创建）
+2. 组件的用户观察器在其渲染观察器之前运行（因为用户观察器是在渲染观察器之前创建的）
+3. 如果一个组件在父组件的观察者运行期间被销毁，则可以跳过其观察者
+*/
+
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
-  // as we run existing watchers
+  // as we run existing watchers   不要缓存长度，因为在运行现有观察者时，可能会推送更多的观察者
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
@@ -157,20 +163,22 @@ function callActivatedHooks (queue) {
 }
 
 /**
- * Push a watcher into the watcher queue.
+ * Push a watcher into the watcher queue.  push一个依赖（订阅者）到队列中
  * Jobs with duplicate IDs will be skipped unless it's
- * pushed when the queue is being flushed.
+ * pushed when the queue is being flushed.  除非在刷新队列时被推送，否则将跳过具有重复ID的作业
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
   if (has[id] == null) {
     has[id] = true
-    if (!flushing) {
+    if (!flushing) { //如果不是在刷新
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
       let i = queue.length - 1
+      //index是当前执行的索引
+
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
