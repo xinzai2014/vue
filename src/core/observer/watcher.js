@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow  依赖(订阅者) */
 
 import {
   warn,
@@ -23,6 +23,7 @@ let uid = 0
  * A watcher parses an expression, collects dependencies,
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
+ * init中vm.$mount 挂载，在这之后会执行 mountComponent 方法，Watcher 就是在这里实例化的
  */
 export default class Watcher {
   vm: Component;
@@ -98,12 +99,14 @@ export default class Watcher {
 
   /**
    * Evaluate the getter, and re-collect dependencies.
+   * 评估getter，并重新收集依赖关系
    */
   get () {
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      //当getter执行updateComponent时会出发data的getter，进行依赖收集
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -125,6 +128,7 @@ export default class Watcher {
 
   /**
    * Add a dependency to this directive.
+   * 将依赖关系添加到此指令
    */
   addDep (dep: Dep) {
     const id = dep.id
@@ -139,6 +143,7 @@ export default class Watcher {
 
   /**
    * Clean up for dependency collection.
+   * 清理依赖项收集
    */
   cleanupDeps () {
     let i = this.deps.length
@@ -159,23 +164,24 @@ export default class Watcher {
   }
 
   /**
-   * Subscriber interface.
-   * Will be called when a dependency changes.
+   * Subscriber interface. 订阅者接口
+   * Will be called when a dependency changes.  当依赖项发生变化时调用
    */
   update () {
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true
-    } else if (this.sync) {
+    } else if (this.sync) { //同步
       this.run()
     } else {
+      //主要走这里
       queueWatcher(this)
     }
   }
 
   /**
-   * Scheduler job interface.
-   * Will be called by the scheduler.
+   * Scheduler job interface.  调度工作接口
+   * Will be called by the scheduler.  当被调度时调用
    */
   run () {
     if (this.active) {

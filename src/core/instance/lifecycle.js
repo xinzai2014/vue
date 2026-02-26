@@ -137,7 +137,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 }
-
+//$mount方法执行
 export function mountComponent (
   vm: Component,
   el: ?Element,

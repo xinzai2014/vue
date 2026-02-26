@@ -155,6 +155,7 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  //创建dep实例，用于收集依赖项，每个属性都有一个独立的dep实例和id
   const dep = new Dep()
   //Object.getOwnPropertyDescriptor获取属性描述符
   /***configurable、enumerable、value、writable */
@@ -170,16 +171,25 @@ export function defineReactive (
     val = obj[key]
   }
   // 递归地为子对象添加响应式属性
+  // 发布-订阅者
+  // Dep 说白了就是发布者,它的工作就是依赖管理
+  // Watcher 说白了就是订阅者，它接受 Dep 发过来的更新通知之后，就去执行视图更新了
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
+      // 当获取属性值时，判断是否有目标依赖项（Dep.target），
+      // 如果有，则将目标依赖项添加到依赖列表中，并收集子对象的依赖项。
+
+      //当mounted时创建watcher实例，会触发getter，进行依赖收集
       const value = getter ? getter.call(obj) : val
+      //target：Watcher
       if (Dep.target) {
         //收集依赖
         dep.depend()
         if (childOb) {
+          //收集子对象的依赖项
           childOb.dep.depend()
           if (Array.isArray(value)) {
             dependArray(value)
@@ -189,6 +199,7 @@ export function defineReactive (
       return value
     },
     set: function reactiveSetter (newVal) {
+      //当设置值时，执行notify方法通知依赖项更新
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
       if (newVal === value || (newVal !== newVal && value !== value)) {

@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow   依赖管理*/
 
 import type Watcher from './watcher'
 import { remove } from '../util/index'
@@ -18,10 +18,11 @@ export default class Dep {
 
   constructor () {
     this.id = uid++
-    this.subs = []
+    this.subs = []  // 收集监听者
   }
 
   addSub (sub: Watcher) {
+    //调用depend后回掉该方法将watchers添加到subs中
     this.subs.push(sub)
   }
 
@@ -37,6 +38,7 @@ export default class Dep {
 
   notify () {
     // stabilize the subscriber list first
+    // 首先稳定订阅者列表，浅拷贝一下
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
@@ -53,6 +55,12 @@ export default class Dep {
 // The current target watcher being evaluated.
 // This is globally unique because only one watcher
 // can be evaluated at a time.
+/**
+ *
+当前正在评估的目标观察者。
+这是全局独一无二的，因为只有一个观察者
+可以一次性评估
+ */
 Dep.target = null
 const targetStack = []
 
