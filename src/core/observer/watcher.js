@@ -92,6 +92,7 @@ export default class Watcher {
         )
       }
     }
+    //初始时会执行getter，收集依赖
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -106,7 +107,8 @@ export default class Watcher {
     let value
     const vm = this.vm
     try {
-      //当getter执行updateComponent时会出发data的getter，进行依赖收集
+       //主要走这里（创建时执行是为了触发data 的get收集依赖，之后update执行run执行get是为了触发patch节点diff比对生成新的虚拟节点）
+      //当getter执行updateComponent时会触发data的getter，进行依赖收集
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -184,7 +186,7 @@ export default class Watcher {
    * Will be called by the scheduler.  当被调度时调用
    */
   run () {
-    if (this.active) {
+    if (this.active) { //主要走这里get
       const value = this.get()
       if (
         value !== this.value ||

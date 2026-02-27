@@ -33,6 +33,8 @@ export const emptyNode = new VNode('', {}, [])
 const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
 
 function sameVnode (a, b) {
+  //key相同+是否为异步组件相同+（标签相同+是否为组件相同+data是否都定义+如果是input属性都相同 或 。。。）
+  // 主要是判断key和标签是否相同
   return (
     a.key === b.key &&
     a.asyncFactory === b.asyncFactory && (
@@ -400,7 +402,7 @@ export function createPatchFunction (backend) {
       removeNode(vnode.elm)
     }
   }
-
+  //diff算法，比较新旧虚拟 DOM 树的差异，更新 DOM 树
   function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
     let oldStartIdx = 0
     let newStartIdx = 0
@@ -497,7 +499,9 @@ export function createPatchFunction (backend) {
       if (isDef(c) && sameVnode(node, c)) return i
     }
   }
-
+  //diff算法执行入口，修补根节点
+  //patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)，主要逻辑执行时传入参数
+  // updateChildren是diff算法，比较新旧虚拟 DOM 树
   function patchVnode (
     oldVnode,
     vnode,
@@ -506,17 +510,18 @@ export function createPatchFunction (backend) {
     index,
     removeOnly
   ) {
-    if (oldVnode === vnode) {
+    if (oldVnode === vnode) { //如果节点完全相同直接返回不进行处理
       return
     }
 
-    if (isDef(vnode.elm) && isDef(ownerArray)) {
+    if (isDef(vnode.elm) && isDef(ownerArray)) { //ownerArray为null
       // clone reused vnode
       vnode = ownerArray[index] = cloneVNode(vnode)
     }
 
     const elm = vnode.elm = oldVnode.elm
-
+    // 如果旧节点是异步占位符，且新节点已经解析完成，则进行 hydration 操作
+    // 先忽略该逻辑，不清楚什么场景会用到
     if (isTrue(oldVnode.isAsyncPlaceholder)) {
       if (isDef(vnode.asyncFactory.resolved)) {
         hydrate(oldVnode.elm, vnode, insertedVnodeQueue)
@@ -526,10 +531,10 @@ export function createPatchFunction (backend) {
       return
     }
 
-    // reuse element for static trees.
-    // note we only do this if the vnode is cloned -
-    // if the new node is not cloned it means the render functions have been
-    // reset by the hot-reload-api and we need to do a proper re-render.
+    // reuse element for static trees.  静态树的重用元素  有v-once指令的组件 isStatic为true，先忽略该逻辑
+    // note we only do this if the vnode is cloned -  请注意，我们只在克隆vnode时才这样做
+    // if the new node is not cloned it means the render functions have been  如果新节点未被克隆，则表示渲染函数已被克隆
+    // reset by the hot-reload-api and we need to do a proper re-render.  通过热重载api重置，我们需要进行适当的重新渲染
     if (isTrue(vnode.isStatic) &&
       isTrue(oldVnode.isStatic) &&
       vnode.key === oldVnode.key &&
@@ -593,6 +598,7 @@ export function createPatchFunction (backend) {
   const isRenderedModule = makeMap('attrs,class,staticClass,staticStyle,key')
 
   // Note: this is a browser-only function so we can assume elms are DOM nodes.
+  // 这是一个仅限浏览器的函数，因此我们可以假设elm是DOM节点
   function hydrate (elm, vnode, insertedVnodeQueue, inVPre) {
     let i
     const { tag, data, children } = vnode
@@ -707,13 +713,14 @@ export function createPatchFunction (backend) {
     const insertedVnodeQueue = []
 
     if (isUndef(oldVnode)) {
-      // empty mount (likely as component), create new root element
+      // empty mount (likely as component), create new root element  如果没有旧的vnode直接创建节点
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
+      //nodeType==1的是真实的dom节点，nodeType==3的是文本节点，nodeType==8的是注释节点，只有初始节点才会出现真实dom，处理之后都会变成虚拟节点
       const isRealElement = isDef(oldVnode.nodeType)
-      if (!isRealElement && sameVnode(oldVnode, vnode)) {
-        // patch existing root node
+      if (!isRealElement && sameVnode(oldVnode, vnode)) { // 不是真实dom节点，但是虚拟节点相同 主要走该逻辑
+        // patch existing root node  //热更新存在节点，修补
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
         if (isRealElement) {
@@ -724,6 +731,7 @@ export function createPatchFunction (backend) {
             oldVnode.removeAttribute(SSR_ATTR)
             hydrating = true
           }
+          //如果检测到页面是由服务端渲染的（例如，通过特定的 SSR 属性识别），就会将 hydrating 参数设置为 true
           if (isTrue(hydrating)) {
             if (hydrate(oldVnode, vnode, insertedVnodeQueue)) {
               invokeInsertHook(vnode, insertedVnodeQueue, true)
@@ -738,8 +746,9 @@ export function createPatchFunction (backend) {
               )
             }
           }
-          // either not server-rendered, or hydration failed.
-          // create an empty node and replace it
+          // either not server-rendered, or hydration failed.  要么不是服务器渲染，要么水合失败
+          // create an empty node and replace it 创建一个空节点并替换它
+          // 也就是不是服务端渲染执行以下
           oldVnode = emptyNodeAt(oldVnode)
         }
 

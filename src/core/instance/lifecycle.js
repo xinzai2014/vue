@@ -68,7 +68,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates
-      //节点比对patch方法
+      //节点比对patch方法，主要走这里
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
     restoreActiveInstance()
