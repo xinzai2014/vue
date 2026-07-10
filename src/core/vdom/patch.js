@@ -402,9 +402,26 @@ export function createPatchFunction (backend) {
       removeNode(vnode.elm)
     }
   }
-  //diff算法，比较新旧虚拟 DOM 树的差异，更新 DOM 树
-  //父级元素，旧子节点数组，新子节点数组，插入虚拟节点队列，移除只模式
-  function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
+  // diff算法，比较新旧虚拟 DOM 树的差异，更新 DOM 树
+//父级元素，旧子节点数组，新子节点数组，插入虚拟节点队列，移除只模式
+/**
+ * 更新子节点，Vue 2 虚拟 DOM diff 算法的核心实现
+ *
+ * 使用双端比较策略（双指针法），从数组两端向中间遍历，尽可能复用已有的 DOM 节点：
+ * 1. 旧头 vs 新头 → 相同则复用并向后移动指针
+ * 2. 旧尾 vs 新尾 → 相同则复用并向前移动指针
+ * 3. 旧头 vs 新尾 → 相同则复用并移动 DOM 节点到尾部
+ * 4. 旧尾 vs 新头 → 相同则复用并移动 DOM 节点到头部
+ * 5. 以上都不匹配时，通过 key 映射查找旧节点中是否存在可复用的节点
+ *
+ * 参数：
+ * @param {Element} parentElm - 父级 DOM 元素
+ * @param {Array} oldCh - 旧子节点数组
+ * @param {Array} newCh - 新子节点数组
+ * @param {Array} insertedVnodeQueue - 插入虚拟节点队列
+ * @param {boolean} removeOnly - 仅移除模式，用于 <transition-group>
+ */
+function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
     let oldStartIdx = 0 //旧数据开始索引
     let newStartIdx = 0 //新数据开始索引
     let oldEndIdx = oldCh.length - 1 //旧数据结束索引
@@ -565,7 +582,7 @@ export function createPatchFunction (backend) {
        * 只有子节点只有旧的，移除节点
        * 如果节点没有新的，旧的还是text，则清空text
        */
-      if (isDef(oldCh) && isDef(ch)) { //重点diff逻辑
+      if (isDef(oldCh) && isDef(ch)) { //重点diff逻辑 主要走这里
         if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
       } else if (isDef(ch)) {
         if (process.env.NODE_ENV !== 'production') {
@@ -727,11 +744,14 @@ export function createPatchFunction (backend) {
     } else {
       //nodeType==1的是真实的dom节点，nodeType==3的是文本节点，nodeType==8的是注释节点，只有初始节点才会出现真实dom，处理之后都会变成虚拟节点
       const isRealElement = isDef(oldVnode.nodeType)
-      if (!isRealElement && sameVnode(oldVnode, vnode)) { // 不是真实dom节点，但是虚拟节点相同 主要走该逻辑
+      if (!isRealElement && sameVnode(oldVnode, vnode)) { // 不是真实dom节点，并且虚拟节点相同 主要走该逻辑sameVnode里比较了key
+        // key相同才进行比较 主要走这里
         // patch existing root node  //热更新存在节点，修补
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
         if (isRealElement) {
+          // 挂载到真实 DOM 元素
+          // 检查这是否是服务端渲染的内容，以及我们是否能成功进行水合（hydration）。
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
