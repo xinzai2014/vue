@@ -65,9 +65,10 @@ export function renderMixin (Vue: Class<Component>) {
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }
-
+  //vm._update(vm._render(), hydrating)里的vm._render()执行到这里
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
+    // render是在 src/platforms/web/entry-runtime-with-compiler.js#73行定义的
     const { render, _parentVnode } = vm.$options
 
     if (_parentVnode) {
@@ -91,6 +92,7 @@ export function renderMixin (Vue: Class<Component>) {
       // 彼此独立。嵌套组件的渲染函数被调用
       // 当父组件被更新时。
       currentRenderingInstance = vm
+      // 调用 render 函数，生成虚拟 DOM
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)

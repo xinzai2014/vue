@@ -56,6 +56,7 @@ export function initLifecycle (vm: Component) {
 }
 
 export function lifecycleMixin (Vue: Class<Component>) {
+  //vm._update方法执行，更新组件，重要节点比对方法patch在这里执行
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el // 缓存上一个元素
@@ -188,10 +189,15 @@ export function mountComponent (
   } else {
     updateComponent = () => {
       //_update方法执行，更新组件，重要节点比对方法patch在这里执行
+      // render是生成虚拟dom，在src/core/instance/render.js#69行定义 ,
+      // _update方法是更新组件，在该文件的60行定义
       vm._update(vm._render(), hydrating)
     }
   }
 
+// 我们在 watcher 的构造函数中将此设置为 vm._watcher
+// 因为 watcher 的初始 patch 可能会调用 $forceUpdate（例如在子组件的 mounted 钩子内）
+// 这依赖于 vm._watcher 已经被定义
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
@@ -336,6 +342,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 }
 
 export function callHook (vm: Component, hook: string) {
+  // 禁用生命周期钩子调用时的依赖收集
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
   const handlers = vm.$options[hook]

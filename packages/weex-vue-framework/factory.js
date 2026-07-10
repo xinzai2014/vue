@@ -4212,7 +4212,7 @@ function mountComponent (
   hydrating
 ) {
   vm.$el = el;
-  if (!vm.$options.render) {
+  if (!vm.$options.render) { //给render赋值
     vm.$options.render = createEmptyVNode;
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */

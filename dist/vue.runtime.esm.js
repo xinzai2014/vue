@@ -4,7 +4,11 @@
  * Released under the MIT License.
  */
 /*  */
-
+const process = {
+  env: {
+    NODE_ENV: 'development'
+  }
+}
 var emptyObject = Object.freeze({});
 
 // These helpers produce better VM code in JS engines due to their

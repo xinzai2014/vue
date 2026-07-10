@@ -98,6 +98,7 @@ function flushSchedulerQueue () {
     }
     id = watcher.id
     has[id] = null
+    // 主要走这里 一次调用观察者的run方法
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -116,12 +117,13 @@ function flushSchedulerQueue () {
     }
   }
 
-  // keep copies of post queues before resetting state
+  // keep copies of post queues before resetting state 在重置状态之前保留发布队列的副本 queue.slice()是浅拷贝
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
   resetSchedulerState()
 
+  // 调用组件的 updated 和 activated 钩子 ，keeplive 组件需要调用 activated 钩子
   // call component updated and activated hooks
   callActivatedHooks(activatedQueue)
   callUpdatedHooks(updatedQueue)
@@ -192,6 +194,7 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 走这里
       nextTick(flushSchedulerQueue)
     }
   }

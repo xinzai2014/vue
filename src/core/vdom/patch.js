@@ -403,15 +403,16 @@ export function createPatchFunction (backend) {
     }
   }
   //diff算法，比较新旧虚拟 DOM 树的差异，更新 DOM 树
+  //父级元素，旧子节点数组，新子节点数组，插入虚拟节点队列，移除只模式
   function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
-    let oldStartIdx = 0
-    let newStartIdx = 0
-    let oldEndIdx = oldCh.length - 1
-    let oldStartVnode = oldCh[0]
-    let oldEndVnode = oldCh[oldEndIdx]
-    let newEndIdx = newCh.length - 1
-    let newStartVnode = newCh[0]
-    let newEndVnode = newCh[newEndIdx]
+    let oldStartIdx = 0 //旧数据开始索引
+    let newStartIdx = 0 //新数据开始索引
+    let oldEndIdx = oldCh.length - 1 //旧数据结束索引
+    let oldStartVnode = oldCh[0]  //旧数据开始节点
+    let oldEndVnode = oldCh[oldEndIdx] //旧数据结束节点
+    let newEndIdx = newCh.length - 1 //新数据结束索引
+    let newStartVnode = newCh[0] //新数据开始节点
+    let newEndVnode = newCh[newEndIdx] //新数据结束节点
     let oldKeyToIdx, idxInOld, vnodeToMove, refElm
 
     // removeOnly is a special flag used only by <transition-group>
@@ -422,31 +423,31 @@ export function createPatchFunction (backend) {
     if (process.env.NODE_ENV !== 'production') {
       checkDuplicateKeys(newCh)
     }
-
+    // 图解该部分逻辑 https://blog.csdn.net/qq_33396780/article/details/138223234
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-      if (isUndef(oldStartVnode)) {
+      if (isUndef(oldStartVnode)) { //旧数据开始节点没定义，索引和节点后移
         oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
-      } else if (isUndef(oldEndVnode)) {
+      } else if (isUndef(oldEndVnode)) { //旧数据结束节点没定义，索引和节点前移
         oldEndVnode = oldCh[--oldEndIdx]
-      } else if (sameVnode(oldStartVnode, newStartVnode)) {
+      } else if (sameVnode(oldStartVnode, newStartVnode)) { //新旧数据开始节点相同，递归比较子节点，索引和节点后移
         patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
         oldStartVnode = oldCh[++oldStartIdx]
         newStartVnode = newCh[++newStartIdx]
-      } else if (sameVnode(oldEndVnode, newEndVnode)) {
+      } else if (sameVnode(oldEndVnode, newEndVnode)) { //新旧数据结束节点相同，递归比较子节点，索引和节点前移
         patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
         oldEndVnode = oldCh[--oldEndIdx]
         newEndVnode = newCh[--newEndIdx]
-      } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
+      } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right，如果就数据开始节点==新数据结束节点，递归比较子节点
         patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
         canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))
         oldStartVnode = oldCh[++oldStartIdx]
         newEndVnode = newCh[--newEndIdx]
-      } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
+      } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left 如果旧数据结束节点==新数据开始节点，递归比较子节点
         patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
         canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)
         oldEndVnode = oldCh[--oldEndIdx]
         newStartVnode = newCh[++newStartIdx]
-      } else {
+      } else { //当旧头新头、旧尾新尾、旧头新尾、旧尾新头都不相同时
         if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
         idxInOld = isDef(newStartVnode.key)
           ? oldKeyToIdx[newStartVnode.key]
@@ -546,6 +547,7 @@ export function createPatchFunction (backend) {
 
     let i
     const data = vnode.data
+    // 忽略该逻辑
     if (isDef(data) && isDef(i = data.hook) && isDef(i = i.prepatch)) {
       i(oldVnode, vnode)
     }
@@ -556,8 +558,14 @@ export function createPatchFunction (backend) {
       for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)
       if (isDef(i = data.hook) && isDef(i = i.update)) i(oldVnode, vnode)
     }
-    if (isUndef(vnode.text)) {
-      if (isDef(oldCh) && isDef(ch)) {
+    if (isUndef(vnode.text)) { //如果不是文字节点
+      /**
+       * 子节点旧新都定义了开始对比
+       * 只有子节点只有新的，如果旧节点是text类型则清空text内容，添加addVnodes虚拟节点
+       * 只有子节点只有旧的，移除节点
+       * 如果节点没有新的，旧的还是text，则清空text
+       */
+      if (isDef(oldCh) && isDef(ch)) { //重点diff逻辑
         if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
       } else if (isDef(ch)) {
         if (process.env.NODE_ENV !== 'production') {

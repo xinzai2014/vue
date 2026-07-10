@@ -79,6 +79,7 @@ export default class Watcher {
       : ''
     // parse expression for getter
     if (typeof expOrFn === 'function') {
+      // this.getter 在这里赋值为 expOrFn，后续会调用这个函数来获取值， 组件new watcher时会传updateComponent作为getter
       this.getter = expOrFn
     } else {
       this.getter = parsePath(expOrFn)
@@ -109,6 +110,7 @@ export default class Watcher {
     try {
        //主要走这里（创建时执行是为了触发data 的get收集依赖，之后update执行run执行get是为了触发patch节点diff比对生成新的虚拟节点）
       //当getter执行updateComponent时会触发data的getter，进行依赖收集
+      // 主要走这里执行updateComponent，触发data的getter，进行依赖收集
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -190,6 +192,8 @@ export default class Watcher {
       const value = this.get()
       if (
         value !== this.value ||
+        // 深度监听器和对象/数组的监听器即使值相同也应触发，
+        // 因为值可能已经发生了变异。
         // Deep watchers and watchers on Object/Arrays should fire even
         // when the value is the same, because the value may
         // have mutated.

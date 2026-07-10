@@ -5,6 +5,8 @@ import { optimize } from './optimizer'
 import { generate } from './codegen/index'
 import { createCompilerCreator } from './create-compiler'
 
+// `createCompilerCreator` 允许创建使用替代解析器/优化器/代码生成器的编译器，例如 SSR 优化编译器。
+// 这里我们仅导出一个使用默认组件的默认编译器。
 // `createCompilerCreator` allows creating compilers that use alternative
 // parser/optimizer/codegen, e.g the SSR optimizing compiler.
 // Here we just export a default compiler using the default parts.
