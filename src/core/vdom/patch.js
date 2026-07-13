@@ -464,21 +464,26 @@ function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly
         canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)
         oldEndVnode = oldCh[--oldEndIdx]
         newStartVnode = newCh[++newStartIdx]
-      } else { //当旧头新头、旧尾新尾、旧头新尾、旧尾新头都不相同时
+      } else { // 当旧头新头、旧尾新尾、旧头新尾、旧尾新头都不相同时
+        // 如果还没有创建过映射表，就创建一个哈希表，把旧子节点数组中的每个节点的 key 映射到它的索引位置，这样可以通过 key O(1) 时间 快速查找。
         if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
+        // 查找新节点在旧节点中的位置  idxInOld新节点在旧节点中的位置
+        // - 如果新节点有 key ，直接用哈希表查找
+        // - 如果没有 key ，就遍历旧节点数组逐一比对
         idxInOld = isDef(newStartVnode.key)
           ? oldKeyToIdx[newStartVnode.key]
           : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx)
-        if (isUndef(idxInOld)) { // New element
+        if (isUndef(idxInOld)) { // New element 如果旧的里没有就创建一个
           createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
         } else {
           vnodeToMove = oldCh[idxInOld]
           if (sameVnode(vnodeToMove, newStartVnode)) {
+            // key 相同且节点类型相同 → 复用并更新
             patchVnode(vnodeToMove, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
             oldCh[idxInOld] = undefined
             canMove && nodeOps.insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm)
           } else {
-            // same key but different element. treat as new element
+            // same key but different element. treat as new element  key 相同但节点类型不同 → 当作新元素处理
             createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
           }
         }
@@ -486,6 +491,7 @@ function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly
       }
     }
     if (oldStartIdx > oldEndIdx) {
+      // 旧节点遍历完了，新节点还有剩余 → 需要 新增
       refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
       addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)
     } else if (newStartIdx > newEndIdx) {
